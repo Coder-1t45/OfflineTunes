@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <title>OfflineTunes</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="eel.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js"></script>
+</head>
+<body>
+    <audio src="" id="audio_player" ></audio>
+    <div class="navbar">
+        <a onclick="document.getElementById('main').style='transform:translateY(0%)'">TUNES PLAYER</a>
+        <a onclick="document.getElementById('main').style='transform:translateY(-100%)'">MANAGEMENT</a>
+    </div>
+    <!--style="display:none;"-->
+    
+    <div id="duplicate" class="tunebox" style="display: none;">
+        <p>TUNE EXAMPLE A</p>
+        <label>downloading</label>
+    </div>
+    <main id="main" style="">
+        <div class="body">
+            <div style="display:none;" id="add_screen">
+                <div class="box">
+                    <center><h1>ADDING NEW TUNE</h1>
+                    <p>TUNE NAME:   <input id="tune_name" type="text"></p>
+                    <p>TUNE LINK:   <input id="tune_link" type="text"></p>
+                        <div class="buttons">
+                            <button onclick="
+                            addTunes(document.getElementById('tune_name').value,
+                            document.getElementById('tune_link').value
+                            )
+                            ">ADD</button>
+                            <button onclick="
+                            document.getElementById('add_screen').style ='display:none;'
+                            ">CANCEL</button>
+                        </div>
+                    </center>
+                </div>
+            </div>
+            <div id="elements_table"></div>
+            <button class="add" onclick="
+                document.getElementById('add_screen').style =''
+            ">+</button>
+        </div>
+        <div class="body">
+            <center>
+                <h1>MANAGEMENT</h1>
+                <hr>
+            </center>
+            <div id="dstatus">
+                <div class="l">
+                    <p>ALL</p>
+                    <progress max="100"></progress>
+                </div>
+                <div class="l" style="margin-bottom:0;">
+                    <p>CURRENT</p>
+                    <progress max="100">10</progress>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    </div>
+    <div class="player">
+        <input onmousedown="progressUpdateable=false;" onmouseup="progressUpdateable=true;" type="range" id="progress" min="0" value="0" max="10000">
+        <div class="table">
+            <p id="audio_name">playιng: [ѕong naмe] - [arтιѕт naмe]</p>
+                <!--https://emojicombos.com/music-player-text-symbols
+                -->
+                <button style="color:white;">⇄</button>
+                <button onclick="index_button(-1)">◃◃</button>
+                <button onclick="move_audio(-1)">◃</button>
+                <button onclick="play_button(this)" id="playButton">▷</button>
+                <button onclick="move_audio(1)">▹</button>
+                <button onclick="index_button(1)">▹▹</button>
+                <button onclick="repeat_button(this)">↺</button>
+                <input type="range" id="volume_range" min="0" max="100" value="100" onchange="volume_input(this)">
+                <p id="time" style="position:absolute; right:0%; max-width:min-content; min-width: max-content;" id="time">00:00 / 00:00</p>
+        </div>
+        
+    </div>
+    
+</body>
+</html>
