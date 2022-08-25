@@ -1,5 +1,7 @@
 
-let audio_element = document.getElementById('audio_player')
+let audio_element = document.getElementById('audio_player');
+let progress_element = document.getElementById('progress');
+let play_button_element = document.getElementById('playButton');
 let name_text = document.getElementById('audio_name');
 
 let repeate_mode = false;
@@ -23,29 +25,65 @@ function strToTime(val) {
 }
 
 async function addTunes(name, link){
-    let value = await eel.addTunes(name, link)();
+    let b = false; let online_src = ''; let id = -1;
+    [b, online_src, id] = await eel.addTunes(name, link)();
 
-    if (value){
+    let parent = document.getElementById('elements_table')
+    let status = 'online';
 
-    }
-    else{
+    
+    if (b) {
+        tunes_data.push({name:name, src:'', link:link, online_src:online_src, status:status})
+
+        let clone = document.getElementById('duplicate').cloneNode(true);
+        clone.style ='';
         
+        clone.id = 'tune_temp[' + id + ']';
+
+        clone.children[0].innerHTML = name
+        clone.children[1].innerHTML = status != 'local' ? status : '';
+
+        clone.onclick = () => {playTune(id);}
+        parent.append(clone)
+
+        document.getElementById('add_screen').style='display:none;'
     }
 }
+
+//eel functions
+eel.expose(statusTune);
+function statusTune(id){
+    tunes_data[id].status = 'downloading';
+    let parent = document.getElementById('elements_table')
+    parent.children[id].children[1].innerHTML = 'downloading';
+}
+
+eel.expose(updateTune);
+function updateTune(id, src){
+    tunes_data[id].status = 'local';
+    tunes_data[id].src = src;
+    let parent = document.getElementById('elements_table')
+    parent.children[id].children[1].innerHTML = '';
+}
+//done
 
 function playTune(index){
     tunes_data.forEach((element, id)=>{
         if (id == index){
-            name_text.innerHTML = 'playιng: ' + tunes_data[index].name;
-            audio_element.src = tunes_data[index].src;
+            name_text.innerHTML = 'playιng: ' + element.name;
+            audio_element.src =  element.status != 'local'? element.online_src: element.src;
             document.getElementById('elements_table').children[id].style = 'background-color: rgb(205, 205, 205);';
         }
         else{
             document.getElementById('elements_table').children[id].style = '';
         }
     })
-
+    
+    progress_element.value = 0;
     audio_element.currentTime = 0;
+    audio_element.play()
+    play_button_element.innerHTML = 'II';
+    if (play_button_element.className == '') play_button_element.className = 'd'
 }
 function updateTime(){
     document.getElementById("time").innerHTML = strToTime((progress_element.value / 10000) * audio_element.duration) + ' / ' + strToTime(audio_element.duration);
@@ -142,6 +180,7 @@ $(window).ready(()=>{
     audio_element = document.getElementById('audio_player')
     name_text = document.getElementById('audio_name');
     progress_element = document.getElementById('progress')
+    play_button_element = document.getElementById('playButton')
 
     audio_element.addEventListener('timeupdate',Update, false);
    

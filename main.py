@@ -4,9 +4,8 @@ from json import loads, dumps
 import youtube_dl
 import threading
 import os
-
-TUNES_FOLDER = 'views/musics'
-TEMPS_FILE = 'temp.json'
+from temp import TEMPS_FILE
+TUNES_FOLDER = 'musics'
 
 downloading = False
 gathering = False
@@ -20,6 +19,7 @@ def download(tune_name:str, tune_link:str, id:int):
     global download_list, gathering, downloading
 
     gathering = True
+    statusTune(id=id)
     video_url = tune_link
     video_info = youtube_dl.YoutubeDL().extract_info(
         url = video_url,download=False
@@ -28,15 +28,16 @@ def download(tune_name:str, tune_link:str, id:int):
     options={
         'format':'bestaudio/best',
         'keepvideo':False,
-        'outtmpl':f'{TUNES_FOLDER}/{filename}',
+        'outtmpl':f'views/{TUNES_FOLDER}/{filename}',
     }
 
-    print(video_info['webpage_url'])
     downloading = True
     with youtube_dl.YoutubeDL(options) as ydl:
         ydl.download([video_info['webpage_url']])
     downloading = False
+    print('updateing tune')
     updateTune(id=id, src=f'{TUNES_FOLDER}/{filename}')
+    download_list.pop(0)
     gathering = False
 
 def get_online_audio(tune_link):
@@ -47,22 +48,27 @@ def get_online_audio(tune_link):
     return video_info['requested_formats'][1]['url']
 
 #handeling client
-def get_progress_data(file_path):
+def gather_current_progress():
     while True:
-        global download_list
-        
+        global TEMPS_FILE
         if downloading:
             global current_progress
-            with open(file_path, 'r') as file:
+            with open(TEMPS_FILE, 'r') as file:
                 data = loads(file.read())
                 current_progress = data['current_progress']
-        
-        elif len(download_list) > 0 and not gathering:
-            object = download_list[0]
-            dthread = threading.Thread(target=download, args=(object['name'], object['link'], object['id']))
-            dthread.start()
 
-thread = threading.Thread(target=get_progress_data, args=(TEMPS_FILE))
+def download_thread_management():
+    id = 1
+    while True:
+        global download_list
+        if len(download_list) > 0 and not gathering:
+            print(f'\n\t(id={id}) downloading process\n')
+            object = download_list[0]
+            download(object['name'], object['link'], object['id'])
+
+#thread = threading.Thread(target=gather_current_progress)
+#thread.start()
+thread = threading.Thread(target=download_thread_management)
 thread.start()
 
 @app.expose
@@ -85,16 +91,33 @@ def addTunes(name, link):
         
         with open(TEMPS_FILE, 'w') as write_stream:
             write_stream.write(dumps(data))
+    
+        return [True, object['online_src'], object['id']]
         
 
 #update that the app start downloading
 def statusTune(id):
-    pass
+    with open(TEMPS_FILE, 'r') as read_stream:
+        data = loads(read_stream.read())
+
+        data['tunes_data'][id]['status'] = 'downloading'
+        
+        with open(TEMPS_FILE, 'w') as write_stream:
+            write_stream.write(dumps(data))
+            app.statusTune(id)
 
 #update after download
 def updateTune(id, src):
     #change status and src
-    pass
+    with open(TEMPS_FILE, 'r') as read_stream:
+        data = loads(read_stream.read())
+
+        data['tunes_data'][id]['status'] = 'local'
+        data['tunes_data'][id]['src'] = src
+        
+        with open(TEMPS_FILE, 'w') as write_stream:
+            write_stream.write(dumps(data))
+            app.updateTune(id, src)
 
 temp_sample = {
     'current_progress':'',

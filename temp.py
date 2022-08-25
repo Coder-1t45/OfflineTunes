@@ -1,6 +1,6 @@
-from main import TEMPS_FILE
 from json import dumps, loads
 
+TEMPS_FILE = 'temp.json'
 def updateProgress(message:str):
     with open(TEMPS_FILE, 'r') as file:
         data = loads(file.read())

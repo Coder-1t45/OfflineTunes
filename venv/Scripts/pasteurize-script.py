@@ -1,4 +1,4 @@
-#!D:\Coding\SimpleToolsForU\OfflineTunes\venv\Scripts\python.exe
+#!D:\Coding\SimpleToolsForU\GitHub\OfflineTunes\venv\Scripts\python.exe
 # EASY-INSTALL-ENTRY-SCRIPT: 'future==0.18.2','console_scripts','pasteurize'
 import re
 import sys
