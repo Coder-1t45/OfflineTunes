@@ -4,7 +4,9 @@ body{
     user-select: none;
     overflow-y:hidden;
 }
-
+hr{
+    border:0.12vh solid black
+}
 input {
     margin-left:1vh;
     font-size: 2.2vh;
@@ -16,6 +18,9 @@ input {
 input:focus{
     outline:none;
     transform:scale(1.07)
+}
+input[type=range]{
+    transform:scale(1)
 }
 p{
     font-size: 2.2vh;
@@ -86,6 +91,29 @@ button:active{
     display: inline-block;
     margin:0 1vh;
 }
+.trash {
+    position:absolute;
+    right:7%;
+    bottom:2%;
+    font-size: 3.5vh;
+    font-weight: bold;
+    margin:0;
+    background-color:rgb(215, 215, 215);
+    padding:1.2vh 2.16vh;
+    z-index: 99;
+    border:0;
+    border-radius: 100%;
+    outline:0;
+    transition:transform .1s ease-out;
+}
+.trash:hover {
+    transform:scale(1.2);
+    background-color: rgb(240, 12, 12);
+}
+.trash:active {
+    transform:scale(1.12);
+    background-color: rgb(170, 33, 33);
+}
 .player{
     position:absolute;
     top:90%;
@@ -94,15 +122,16 @@ button:active{
     width: 100%;
     background-color: rgb(46, 46, 46);
     vertical-align:middle;
+    z-index: 1000;
 }
-.player input[type=range]{
+.player input[type=range]#progress{
     margin:0;
-    position:relative;
+    position:absolute;
     min-width:100%;
     max-width: 100%;
+    top:0%;
     width: 100%;
     height:3%;
-    transform:translateY(-480%);
     z-index: 300;
     border:none;
     margin:0;
@@ -133,7 +162,14 @@ button:active{
     max-width: 186vh;
     transform:translateY(-20%)
 }
-.player .table p{
+.player .middle{
+    position:absolute;
+    bottom:15%;
+    right:50%;
+    transform:translateX(50%);
+
+}
+.player p#audio_name{
     color:white;
     display: inline-block;
     margin-left:4vh;
@@ -143,7 +179,14 @@ button:active{
     max-height: 4vh;
     transform:translateY(30%);
 }
-.player .table button{
+.player p#time{
+    position:absolute;
+    bottom:15%;
+
+    right:5%;
+    color:white;
+}
+.player .middle button{
     background-color: rgb(46, 46, 46);
     color:white;
     position:relative;
@@ -151,7 +194,6 @@ button:active{
     font-size: 4vh;
     vertical-align:middle;
     transition: transform .1s ease-out;
-    transform:translateY(-30%);
     outline :none;
     border:none;
     background-color: none;
@@ -160,31 +202,37 @@ button:active{
     letter-spacing: -1vh;
     display: inline-block;
 }
-.player .table button.d{
+.player .middle button.d{
     letter-spacing: 0vh;
 }
-.player .table button:hover{
-    transform:scale(1.1) translateY(-30%);
+.player .middle button:hover{
+    transform:scale(1.1);
 }
-.player .table button:active{
-    transform:scale(0.95) translateY(-30%);
+.player .middle button:active{
+    transform:scale(0.95);
 }
-.player .table input[type=range]#volume_range{
-    position:relative;
+.player input[type=range]#volume_range{
+    position:absolute;
     min-width: 10%;
     width:10%;
     max-width: 10%;
     min-height: 1%;
     height: 1%;
     max-height: 1%;
-    transform:translateY(-80%) translateX(30%);
+    bottom:46%;
+    right:15%;
+    transition:transform .1s ease-in-out;
 }
+.player input[type=range]#volume_range:hover{
+    transform:scaleX(1.1);
+}
+
 .navbar{
     position:absolute;
     padding-top:5%;
     top:0;
     left:0;
-    height:80%;
+    height:85%;
     width: 15%;
     background-color: rgb(205, 205, 205);
 }
@@ -283,7 +331,7 @@ main{
     height:90%;
     width: 85%;
     overflow-y:visible;
-    transition:transform .6s ease-out;
+    transition:transform .25s ease-in-out;
 }
 .body{
     position:relative;
@@ -295,6 +343,8 @@ main{
     min-width: 100%;
     width: 100%;
     max-width: 100%;
+    padding:0vh;
+    margin:vh;
 }
 #elements_table{
     position:relative;
@@ -311,18 +361,59 @@ main{
 h1{
     font-size: 3.5vh;
 }
-#dstatus{
+.body#management div#network{
     position:absolute;
-    left:2%;
-    bottom:5%;
-    height:10%;
-    width:20%;
-    background-color: rgb(250,250,250);
-    border:0.4vh solid rgb(250,250,250);
-    border-radius: 1vh;
-    box-shadow: 4px 4px 6px 1px rgb(0, 0, 0, 20%);
+    top:8%;
+    left:0%;
+    width: 100%;
+    height: 89%;
+    background-color: rgb(248, 248, 248);
 }
-#dstatus .l{
+.body#management div#network div#dstatus{
+    position:absolute;
+    left:0%;
+    bottom:0%;
+    height:12%;
+    width:100%;
+    color:rgb(75,75,75);
+    font-weight: lighter;
+    z-index: 50;
+}
+.body#management div#network div#ngragh{
+    position:absolute;
+    left:0%;
+    top:0%;
+    height:40%;
+    max-height: 40%;
+    width: 100%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    background-color: rgb(220,220,220);
+}
+.body#management div#network div#ngragh iframe{
+    position:absolute;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    left:0%;
+    top:0%;
+    min-height: 90%;
+    height:90%;
+    max-height: 90%;
+    min-width: 100%;
+    width: 100%;
+    max-width: 100%;
+}
+.body#management div#network div#dlist{
+    position:absolute;
+    left:0%;
+    top:40%;
+    height:48%;
+    max-height: 48%;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.body#management div#network div#dstatus .l{
     display: inline-block;
     position:relative;
     width:90%;
@@ -330,16 +421,32 @@ h1{
     height:4vh;
     margin-bottom: 1vh;
 }
-#dstatus .l p{
+.body#management div#network div#dstatus .l p{
     display: inline-block;
     margin:0;
     max-width: 11vh;
     width: 11vh;
     min-width: 11vh;
+    
 }
-#dstatus .l progress{
+.body#management div#network div#dstatus .l progress{
     display: inline-block;
-    max-width: 12vh;
-    width: 12vh;
-    min-width: 12vh;
+    max-width: 35vh;
+    width: 35vh;
+    min-width: 35vh;
+    max-height: 1vh;
+    height: 1vh;
+    min-height: 1vh;
+    transform:translateY(150%);
+    
 }
+
+.body#management div#network div#dstatus .l progress::after{
+    content:attr(value) '%';
+    display:inline-block;
+    color:rgb(75,75,75);
+    font-size: 1.5vh;
+    padding:1vh 1.5vh;
+    transform:translateX(370%) translateY(-40%);
+}
+

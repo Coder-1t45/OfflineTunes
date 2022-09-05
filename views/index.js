@@ -4,14 +4,20 @@ let progress_element = document.getElementById('progress');
 let play_button_element = document.getElementById('playButton');
 let name_text = document.getElementById('audio_name');
 
+
 let repeate_mode = false;
 let progressUpdateable = true;
-let current_index = 0; //current tune index
+let current_index = -1; //current tune index
 let status = ['online', 'downloading', 'local']
 
+let trash_mode = false;
+let trash_selected_ids = []
+
 let tunes_data = []
+let downloading_list = []
 /* every_object_in_tunes_data =  { name:'', src:'', status:'', maybe_element:''}*/
 
+//helpful functions
 function strToTime(val) {
     function tos(a){
         return a.toLocaleString('en-US', {minimumIntegerDigits: 2,useGrouping: false})
@@ -24,9 +30,27 @@ function strToTime(val) {
     else return tos(minutes) + ':' + tos(seconds)
 }
 
-async function addTunes(name, link){
+function list_filter(f, l){
+    let nd = [];
+    l.forEach(x => {
+        if (f(x))
+            nd.push(x)
+    });
+    return nd;
+}
+
+//done
+
+async function addTunes(name, link, buttonPlay, buttonCancel) {
     let b = false; let online_src = ''; let id = -1;
+
+    buttonPlay.disabled = true;
+    buttonCancel.disabled = true;
+
     [b, online_src, id] = await eel.addTunes(name, link)();
+
+    buttonPlay.disabled = false;
+    buttonCancel.disabled = false;
 
     let parent = document.getElementById('elements_table')
     let status = 'online';
@@ -48,55 +72,88 @@ async function addTunes(name, link){
 
         document.getElementById('add_screen').style='display:none;'
     }
+    else {
+
+    }
 }
 
 //eel functions
 eel.expose(statusTune);
-function statusTune(id){
+function statusTune(id) {
     tunes_data[id].status = 'downloading';
     let parent = document.getElementById('elements_table')
     parent.children[id].children[1].innerHTML = 'downloading';
 }
 
 eel.expose(updateTune);
-function updateTune(id, src){
+function updateTune(id, src) {
     tunes_data[id].status = 'local';
     tunes_data[id].src = src;
     let parent = document.getElementById('elements_table')
     parent.children[id].children[1].innerHTML = '';
 }
+
+function list_downloading(boolean = false, progress = 0){
+    downloading_list = list_filter((o)=>{return o.status == 'downloading' || o.status == 'online'},tunes_data)
+    if (boolean){
+        //update display
+    }
+}
+
+eel.expose(currentProgress);
+function currentProgress(p, net_speed, perfix, eta) {
+    
+    console.log([p, net_speed, perfix, eta]);
+    window.frames[0].frameElement.contentWindow.Append(p, net_speed, perfix, eta);     
+    document.getElementById('m_currentProgress').value = p;
+}
 //done
 
-function playTune(index){
-    tunes_data.forEach((element, id)=>{
-        if (id == index){
-            name_text.innerHTML = 'playιng: ' + element.name;
-            audio_element.src =  element.status != 'local'? element.online_src: element.src;
-            document.getElementById('elements_table').children[id].style = 'background-color: rgb(205, 205, 205);';
-        }
-        else{
+function playTune(index) {
+    if (trash_mode){
+        let id = trash_selected_ids.indexOf(index);
+        if (id !== -1) {
+            trash_selected_ids.splice(id, 1);
             document.getElementById('elements_table').children[id].style = '';
         }
-    })
-    
-    progress_element.value = 0;
-    audio_element.currentTime = 0;
-    audio_element.play()
-    play_button_element.innerHTML = 'II';
-    if (play_button_element.className == '') play_button_element.className = 'd'
+        else {
+            document.getElementById('elements_table').children[index].style = 'background-color: rgb(205, 205, 205);';
+            trash_selected_ids.push(index);
+        }
+    }
+    else{
+        current_index = index;
+        tunes_data.forEach((element, id)=>{
+            if (id == current_index){
+                name_text.innerHTML = 'playιng: ' + element.name;
+                audio_element.src =  element.status != 'local'? element.online_src: element.src;
+                document.getElementById('elements_table').children[id].style = 'background-color: rgb(205, 205, 205);';
+            }
+            else{
+                document.getElementById('elements_table').children[id].style = '';
+            }
+        })
+        
+        progress_element.value = 0;
+        audio_element.currentTime = 0;
+        audio_element.play()
+        play_button_element.innerHTML = 'II';
+        if (play_button_element.className == '') play_button_element.className = 'd'
+    }
 }
-function updateTime(){
+function updateTime() {
     document.getElementById("time").innerHTML = strToTime((progress_element.value / 10000) * audio_element.duration) + ' / ' + strToTime(audio_element.duration);
 }
 
-function clear(){
+function clear() {
     let parent = document.getElementById('elements_table')
     while (parent.firstChild) {
         parent.removeChild(parent.firstChild);
     }
     return parent
 }
-async function load_data(){
+
+async function load_data() {
     //clear parent
     parent = clear();
 
@@ -119,8 +176,9 @@ async function load_data(){
         parent.append(clone)
     });
 }
+
 //player buttons
-function play_button(button){
+function play_button(button) {
     let a = new Audio()
     a.className
     //currentTime - זמן כרגע
@@ -139,19 +197,19 @@ function play_button(button){
     }
 }
 
-function repeat_button(button){
-    colorp = 'rgb(48, 118, 240)'
+function repeat_button(button) {
+    colorp = 'rgb(48, 118, 240)';
     if (button.style['color'] == colorp) 
     {button.style = 'color:white;';repeate_mode=false;}
     else {button.style = 'color:'+colorp+';';repeate_mode=true;}
 }
 
-function move_audio(multi){
-    let addon = 5 * multi
-    audio_element.currentTime += addon
+function move_audio(multi) {
+    let addon = 5 * multi;
+    audio_element.currentTime += addon;
 }
 
-function index_button(multi){
+function index_button(multi) {
     //return;
     //disabled right now
     
@@ -164,19 +222,85 @@ function index_button(multi){
         audio_element.src = "";
     }
 }
-function adding_volume(x, m = 0.05){
-    audio_element.volume += x * m 
+
+function adding_volume(x, m = 0.05) {
+    audio_element.volume += x * m ;
     if (audio_element.volume > 1)
-        audio_element.volume = 1
+        audio_element.volume = 1;
     else if (audio_element.volume < 0)
-        audio_element.volume = 0
+        audio_element.volume = 0;
 }
-function volume_input(input_range){
-    audio_element.volume = (input_range.value / input_range.max) * 1
+
+function volume_input(input_range) {
+    audio_element.volume = (input_range.value / input_range.max) * 1;
 }
+
+//trash functionality
+async function trashButton(trash_button){
+    trash_mode = !trash_mode;
+    trash_button.innerHTML = trash_mode ? '?' : 'X';
+    
+    if (!trash_mode){
+        trash_button.style='';
+        
+        tunes_data.forEach((element, id)=>{
+            if (id == current_index) {
+                document.getElementById('elements_table').children[id].style = 'background-color: rgb(205, 205, 205);';
+            }
+            else {
+                document.getElementById('elements_table').children[id].style = '';
+            }
+        })
+
+        //send to client
+        result = await eel.delteTunes(trash_selected_ids)();
+        if (result == 'Done') {
+            if (current_index in trash_selected_ids) {
+                if (tunes_data.length == 0) {
+                    audio_element.pause();
+
+                    audio_element.currentTime = 0;
+                    audio_element.src = '';
+
+                    current_index = -1;
+                    name_text.innerHTML = 'not playιng';
+                }
+                else index_button(1);
+            }
+            parent = document.getElementById('elements_table');
+            trash_selected_ids.sort(function(a, b){return b - a});
+            trash_selected_ids.forEach((element) => {
+                parent.removeChild(parent.children[element]);
+                tunes_data = tunes_data.slice(element,1);
+            })
+        }
+        else if (result == 'Failed') alert(result);
+        trash_selected_ids = []; //delete the list
+    }
+    else{
+        trash_button.style='color:white; background-color:#3d3d3d;';
+        if (current_index >= 0) document.getElementById('elements_table').children[current_index].style = '';
+    }
+}
+function trashOver(trash_button){
+    if (trash_mode){
+        trash_button.innerHTML = trash_selected_ids.length == 0? 'X' : 'V';
+    };
+}
+
+function trashLeave(trash_button){
+    if (trash_mode){
+        trash_button.innerHTML = '?';
+    };
+    if (!trash_mode){
+        trash_button.innerHTML = 'X';
+    };
+}
+
 //when window ready
 $(window).ready(()=>{
     //start space
+    trash_mode = false;
     audio_element = document.getElementById('audio_player')
     name_text = document.getElementById('audio_name');
     progress_element = document.getElementById('progress')
@@ -212,7 +336,7 @@ $(window).ready(()=>{
     progress.oninput = function (){
         updateTime();
     } 
-          
+    
     
     //disable mouse-page scaling
     $(document).keydown(function(event) {

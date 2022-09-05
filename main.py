@@ -4,9 +4,12 @@ from json import loads, dumps
 import youtube_dl
 import threading
 import os
-from temp import TEMPS_FILE
-TUNES_FOLDER = 'musics'
+import time
 
+from temp import TEMPS_FILE
+
+TUNES_FOLDER = 'musics'
+OUT_TUNES = 'views/musics'
 downloading = False
 gathering = False
 current_progress = ''
@@ -19,6 +22,7 @@ def download(tune_name:str, tune_link:str, id:int):
     global download_list, gathering, downloading
 
     gathering = True
+    #updating tune status to downloading
     statusTune(id=id)
     video_url = tune_link
     video_info = youtube_dl.YoutubeDL().extract_info(
@@ -28,7 +32,7 @@ def download(tune_name:str, tune_link:str, id:int):
     options={
         'format':'bestaudio/best',
         'keepvideo':False,
-        'outtmpl':f'views/{TUNES_FOLDER}/{filename}',
+        'outtmpl':f'{OUT_TUNES}/{filename}',
     }
 
     downloading = True
@@ -36,10 +40,12 @@ def download(tune_name:str, tune_link:str, id:int):
         ydl.download([video_info['webpage_url']])
     downloading = False
     print('updateing tune')
+    #updating tune status to local
     updateTune(id=id, src=f'{TUNES_FOLDER}/{filename}')
     download_list.pop(0)
     gathering = False
 
+#get online audio for tune
 def get_online_audio(tune_link):
     video_url = tune_link
     video_info = youtube_dl.YoutubeDL().extract_info(
@@ -47,15 +53,44 @@ def get_online_audio(tune_link):
     )
     return video_info['requested_formats'][1]['url']
 
-#handeling client
+#threads
 def gather_current_progress():
+    def extarct_progress(message:str):
+        if 'at' not in message: return 100, '0KiB/s', '00:00'
+        precent = [m.replace('%', '') for m in message.split() if m.endswith('%')][0]
+        net_speed = [m for m in message.split() if m.endswith('/s')][0]
+        eta = message.split()[len(message.split()) - 1]
+        return float(precent), net_speed, eta
+    def extract_perfix(ns:str):
+        def isfloat(element):
+            try:
+                float(element)
+            except ValueError:
+                return False
+            return True
+        number = ''
+        temp = ns[0]
+        i = 1
+        while isfloat(temp) or temp.endswith('.'):
+            number = temp
+            i += 1
+            temp = ns[0:i]
+        number=number.replace(' ', '')
+        return float(number), ns[i-1:]
+
     while True:
         global TEMPS_FILE
         if downloading:
             global current_progress
-            with open(TEMPS_FILE, 'r') as file:
-                data = loads(file.read())
-                current_progress = data['current_progress']
+
+            from temp import progress_message as PROGRESS
+            current_progress = PROGRESS
+
+            p, ns, eta = extarct_progress(PROGRESS)         
+            net_speed, net_perfix = extract_perfix(ns)
+            
+            app.currentProgress(p, net_speed, net_perfix, eta)
+        time.sleep(1/3) #sleep for 1 frames thread
 
 def download_thread_management():
     id = 1
@@ -66,19 +101,23 @@ def download_thread_management():
             object = download_list[0]
             download(object['name'], object['link'], object['id'])
 
-#thread = threading.Thread(target=gather_current_progress)
-#thread.start()
+gather_thread = threading.Thread(target=gather_current_progress)
+gather_thread.start()
 thread = threading.Thread(target=download_thread_management)
 thread.start()
 
+#handeling client
+
 @app.expose
 def load_data():
+    #data loading
     with open(TEMPS_FILE, 'r') as read_stream:
         data = loads(read_stream.read())
         return dumps(data['tunes_data'])
 
 @app.expose
 def addTunes(name, link):
+    #adding tune to the data and download list
     with open(TEMPS_FILE, 'r') as read_stream:
         data = loads(read_stream.read())
         #usage
@@ -92,8 +131,44 @@ def addTunes(name, link):
         with open(TEMPS_FILE, 'w') as write_stream:
             write_stream.write(dumps(data))
     
-        return [True, object['online_src'], object['id']]
-        
+        return [True, object['online_src'], object['id']] #list unpacking
+
+@app.expose
+def delteTunes(ids:list):
+    #deleting function
+    try:
+        with open(TEMPS_FILE, 'r') as read_stream:
+            data = loads(read_stream.read())
+            clear_unwanted = False
+
+            for id in ids:
+                tune = data['tunes_data'][id]
+                if (tune['status'] == 'local'):
+                    os.remove(os.path.join('views' ,tune['src']))
+                elif (tune['status'] == 'downloading'):
+                    clear_unwanted = True
+                #elif (tune['status'] == 'online'): do nothing
+            
+            #remove from the list afterwords for not damaging the process
+            for id in sorted(ids, reverse=True):
+                del data['tunes_data'][id]
+            
+            #clear unwated .part's files
+            if clear_unwanted:
+                data_files = [tune['src'] for tune in data['tunes_data']]
+                folder_files = [f for f in os.listdir(OUT_TUNES) if os.path.isfile(os.path.join(OUT_TUNES, f))]
+                for f in folder_files:
+                    if f not in data_files:
+                        fpath = os.path.join(OUT_TUNES, f)
+                        os.remove(fpath)
+
+            with open(TEMPS_FILE, 'w') as write_stream:
+                write_stream.write(dumps(data))
+
+                return 'Done'
+    except:
+        return 'Failed'
+
 
 #update that the app start downloading
 def statusTune(id):
@@ -119,12 +194,41 @@ def updateTune(id, src):
             write_stream.write(dumps(data))
             app.updateTune(id, src)
 
+
 temp_sample = {
-    'current_progress':'',
     'tunes_data':[
         #{'name':'', 'src':'', 'status':''}
     ]
 }
+
+#check if theres uncomplited downlod files:
+def check_past_downloading():
+     with open(TEMPS_FILE, 'r') as read_stream:
+        data = loads(read_stream.read())
+        tunes_data = data['tunes_data']
+
+        #usage
+        clear_unwanted = False
+        global download_list
+        
+        for tune in tunes_data:
+            if tune['status'] != 'local':
+                download_list.append(tune)
+                if tune['status'] == 'downloading':
+                    clear_unwanted = True
+        
+        #clear unwated .part's files
+        if clear_unwanted:
+            data_files = [tune['src'] for tune in tunes_data]
+            folder_files = [f for f in os.listdir(OUT_TUNES) if os.path.isfile(os.path.join(OUT_TUNES, f))]
+            for f in folder_files:
+                if f not in data_files:
+                    fpath = os.path.join(OUT_TUNES, f)
+                    os.remove(fpath)
+        
+        with open(TEMPS_FILE, 'w') as write_stream:
+            write_stream.write(dumps(data))
+
 
 if __name__ == '__main__':
     #create temp if not exist
@@ -132,6 +236,8 @@ if __name__ == '__main__':
         with open(TEMPS_FILE, 'w') as f:
             f.write(dumps(temp_sample))
     
+    check_past_downloading()
+
     #run the app
     app.init('views')
     app.start('index.html',size=(1330, 720))

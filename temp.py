@@ -1,9 +1,8 @@
 from json import dumps, loads
 
 TEMPS_FILE = 'temp.json'
+progress_message = ''
 def updateProgress(message:str):
-    with open(TEMPS_FILE, 'r') as file:
-        data = loads(file.read())
-        data['current_progress'] = message
-        with open(TEMPS_FILE, 'w') as write_stream:
-            write_stream.write(dumps(data))
+    global progress_message
+    progress_message = message
+    #print(f'\n\n\n current message {progress_message} \n\n\n\n')
