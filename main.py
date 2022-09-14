@@ -9,7 +9,6 @@ import time
 from temp import TEMPS_FILE
 
 TUNES_FOLDER = 'musics'
-OUT_TUNES = 'views/musics'
 downloading = False
 gathering = False
 current_progress = ''
@@ -32,7 +31,7 @@ def download(tune_name:str, tune_link:str, id:int):
     options={
         'format':'bestaudio/best',
         'keepvideo':False,
-        'outtmpl':f'{OUT_TUNES}/{filename}',
+        'outtmpl':f'{TUNES_FOLDER}/{filename}',
     }
 
     downloading = True
@@ -144,7 +143,7 @@ def delteTunes(ids:list):
             for id in ids:
                 tune = data['tunes_data'][id]
                 if (tune['status'] == 'local'):
-                    os.remove(os.path.join('views' ,tune['src']))
+                    os.remove(tune['src'])
                 elif (tune['status'] == 'downloading'):
                     clear_unwanted = True
                 #elif (tune['status'] == 'online'): do nothing
@@ -156,10 +155,10 @@ def delteTunes(ids:list):
             #clear unwated .part's files
             if clear_unwanted:
                 data_files = [tune['src'] for tune in data['tunes_data']]
-                folder_files = [f for f in os.listdir(OUT_TUNES) if os.path.isfile(os.path.join(OUT_TUNES, f))]
+                folder_files = [f for f in os.listdir(TUNES_FOLDER) if os.path.isfile(os.path.join(TUNES_FOLDER, f))]
                 for f in folder_files:
                     if f not in data_files:
-                        fpath = os.path.join(OUT_TUNES, f)
+                        fpath = os.path.join(TUNES_FOLDER, f)
                         os.remove(fpath)
 
             with open(TEMPS_FILE, 'w') as write_stream:
@@ -220,16 +219,25 @@ def check_past_downloading():
         #clear unwated .part's files
         if clear_unwanted:
             data_files = [tune['src'] for tune in tunes_data]
-            folder_files = [f for f in os.listdir(OUT_TUNES) if os.path.isfile(os.path.join(OUT_TUNES, f))]
+            folder_files = [f for f in os.listdir(TUNES_FOLDER) if os.path.isfile(os.path.join(TUNES_FOLDER, f))]
             for f in folder_files:
                 if f not in data_files:
-                    fpath = os.path.join(OUT_TUNES, f)
+                    fpath = os.path.join(TUNES_FOLDER, f)
                     os.remove(fpath)
         
         with open(TEMPS_FILE, 'w') as write_stream:
             write_stream.write(dumps(data))
 
+#apply requests from outsider path / local file problem
+@app.btl.route('/musics/<music>')
+def local_file_addressor(music):
+    return app.btl.static_file(music,'musics')
 
+@app.expose
+def closeSocket():
+    os._exit(0)
+
+app._websocket
 if __name__ == '__main__':
     #create temp if not exist
     if not os.path.exists(TEMPS_FILE):
@@ -237,7 +245,10 @@ if __name__ == '__main__':
             f.write(dumps(temp_sample))
     
     check_past_downloading()
-
+    
     #run the app
     app.init('views')
     app.start('index.html',size=(1330, 720))
+
+# python -m eel main.py views --onefile --noconsole
+# https://github.com/ChrisKnott/Eel/issues/393

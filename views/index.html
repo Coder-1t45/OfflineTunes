@@ -14,7 +14,7 @@
     <audio src="" id="audio_player" ></audio>
     <div class="navbar">
         <a onclick="document.getElementById('main').style='transform:translateY(0%)'">TUNES PLAYER</a>
-        <a onclick="document.getElementById('main').style='transform:translateY(-100%)'">MANAGEMENT</a>
+        <a onclick="document.getElementById('main').style='transform:translateY(-100%)'">NETWORK</a>
     </div>
     <!--style="display:none;"-->
     
@@ -48,69 +48,18 @@
         </div>
         <div class="body" id="management">
             <center>
-                <h1>MANAGEMENT</h1>
+                <h1>NETWORK</h1>
                 <hr>
             </center>
             <div id="network">
                 <div id="ngragh">
                     <iframe id="network_graph" src="graph/graph.html" frameborder="0"></iframe>
                 </div>
-                <div id="dlist">
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-                    <div class="tunebox">
-                        <p>TUNE EXAMPLE A</p>
-                        <label>downloading</label>
-                    </div>
-
-                </div>
                 <div id="dstatus">
                     <div class="l">
                         <center>
                             <p>ALL</p>
-                            <progress max="100" value="50"></progress>
+                            <progress id="m_allProgress" max="100" value="50"></progress>
                         </center>
                     </div>
                     <div class="l" style="margin-bottom:0;">

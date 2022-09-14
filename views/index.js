@@ -3,7 +3,7 @@ let audio_element = document.getElementById('audio_player');
 let progress_element = document.getElementById('progress');
 let play_button_element = document.getElementById('playButton');
 let name_text = document.getElementById('audio_name');
-
+let volume_input_element = document.getElementById('volume_range')
 
 let repeate_mode = false;
 let progressUpdateable = true;
@@ -15,6 +15,8 @@ let trash_selected_ids = []
 
 let tunes_data = []
 let downloading_list = []
+
+let current_progress = 0;
 /* every_object_in_tunes_data =  { name:'', src:'', status:'', maybe_element:''}*/
 
 //helpful functions
@@ -57,6 +59,8 @@ async function addTunes(name, link, buttonPlay, buttonCancel) {
 
     
     if (b) {
+        allProgressRELOAD()
+        
         tunes_data.push({name:name, src:'', link:link, online_src:online_src, status:status})
 
         let clone = document.getElementById('duplicate').cloneNode(true);
@@ -91,22 +95,10 @@ function updateTune(id, src) {
     tunes_data[id].src = src;
     let parent = document.getElementById('elements_table')
     parent.children[id].children[1].innerHTML = '';
+
+    allProgressNEXT()
 }
 
-function list_downloading(boolean = false, progress = 0){
-    downloading_list = list_filter((o)=>{return o.status == 'downloading' || o.status == 'online'},tunes_data)
-    if (boolean){
-        //update display
-    }
-}
-
-eel.expose(currentProgress);
-function currentProgress(p, net_speed, perfix, eta) {
-    
-    console.log([p, net_speed, perfix, eta]);
-    window.frames[0].frameElement.contentWindow.Append(p, net_speed, perfix, eta);     
-    document.getElementById('m_currentProgress').value = p;
-}
 //done
 
 function playTune(index) {
@@ -126,7 +118,7 @@ function playTune(index) {
         tunes_data.forEach((element, id)=>{
             if (id == current_index){
                 name_text.innerHTML = 'playιng: ' + element.name;
-                audio_element.src =  element.status != 'local'? element.online_src: element.src;
+                audio_element.src =  element.status != 'local'? element.online_src: '/'+element.src;
                 document.getElementById('elements_table').children[id].style = 'background-color: rgb(205, 205, 205);';
             }
             else{
@@ -229,6 +221,7 @@ function adding_volume(x, m = 0.05) {
         audio_element.volume = 1;
     else if (audio_element.volume < 0)
         audio_element.volume = 0;
+    volume_input_element.value = audio_element.volume * volume_input_element.max;
 }
 
 function volume_input(input_range) {
@@ -296,20 +289,51 @@ function trashLeave(trash_button){
         trash_button.innerHTML = 'X';
     };
 }
+//all progress
+let ap_maxtunes = 0;
+let ap_index = 0;
+let ap_current = 0;
+
+function allProgressRELOAD(){
+    ap_maxtunes = list_filter((o)=>{return o.status == 'downloading' || o.status == 'online'},tunes_data).length;
+}
+function allProgressUPDATE(){
+    allProgressRELOAD();
+    ap_current = current_progress;
+    //display
+    let value = (ap_current / 100 + ap_index) / ap_maxtunes
+    all_progress = document.getElementById('m_allProgress');
+    all_progress.value = value * all_progress.max;
+}
+function allProgressNEXT(){
+    ap_current = 0;
+    ap_index+=1
+}
+
+eel.expose(currentProgress);
+function currentProgress(p, net_speed, perfix, eta) {
+    
+    console.log([p, net_speed, perfix, eta]);
+    window.frames[0].frameElement.contentWindow.Append(p, net_speed, perfix, eta);     
+    document.getElementById('m_currentProgress').value = p;
+    current_progress = p;
+}
 
 //when window ready
 $(window).ready(()=>{
     //start space
     trash_mode = false;
+
     audio_element = document.getElementById('audio_player')
     name_text = document.getElementById('audio_name');
     progress_element = document.getElementById('progress')
     play_button_element = document.getElementById('playButton')
 
     audio_element.addEventListener('timeupdate',Update, false);
-   
+    volume_input_element = document.getElementById('volume_range')
     load_data();
-
+    //load interval
+    let interval = window.setInterval(allProgressUPDATE, 1000 / 2)
 
     function Update(){
         
@@ -379,5 +403,7 @@ $(window).ready(()=>{
     }
     
     $(window).bind('wheel', (e) => {if (event.ctrlKey == true) e.preventDefault();});
-
+    window.onbeforeunload = window.onclose=async ()=>{
+        await eel.closeSocket()()
+    }
 })
