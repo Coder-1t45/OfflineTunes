@@ -17,6 +17,7 @@ let tunes_data = []
 let downloading_list = []
 
 let current_progress = 0;
+let keyboard_occupied = false;
 
 let dark_mode = false;
 
@@ -112,7 +113,7 @@ function playTune(index) {
             document.getElementById('elements_table').children[id].style = '';
         }
         else {
-            document.getElementById('elements_table').children[index].style = 'background-color: rgb(205, 205, 205);';
+            document.getElementById('elements_table').children[index].style = 'background-color: var(--tunebox-trash);';
             trash_selected_ids.push(index);
         }
     }
@@ -122,7 +123,7 @@ function playTune(index) {
             if (id == current_index){
                 name_text.innerHTML = 'playιng: ' + element.name;
                 audio_element.src =  element.status != 'local'? element.online_src: '/'+element.src;
-                document.getElementById('elements_table').children[id].style = 'background-color: rgb(205, 205, 205);';
+                document.getElementById('elements_table').children[id].style = 'background-color: var(--tunebox-selected); color:white;';
             }
             else{
                 document.getElementById('elements_table').children[id].style = '';
@@ -340,6 +341,18 @@ function dark_mode_handle(){
     object.checked = dark_mode;
 }
 
+function check_occupied(){
+    let el = document.activeElement;
+
+    if (el && (el.tagName.toLowerCase() == 'input' && el.type == 'text' ||
+        el.tagName.toLowerCase() == 'textarea')) {
+        keyboard_occupied = true;
+    } 
+    else {
+        keyboard_occupied = false;
+    }
+}
+
 //when window ready
 $(window).ready(()=>{
     //start space
@@ -384,46 +397,48 @@ $(window).ready(()=>{
         updateTime();
     } 
     
-    
+    //input keyboard occupied
+    let another_interval = setInterval(check_occupied, 100)
+
     //disable mouse-page scaling
     //https://keyjs.dev/
     $(document).keydown(function(event) {
     if (event.ctrlKey==true && (event.which == '61' || event.which == '107' || event.which == '173' || event.which == '109'  || event.which == '187'  || event.which == '189'  ) ) {
             event.preventDefault();
         }
-
-        
-        if (event.which == '32') {
-            play_button(document.getElementById('playButton'))
+        if (!keyboard_occupied) {
+            
+            if (event.which == '32') {
+                play_button(document.getElementById('playButton'))
+            }
+            if (event.ctrlKey == true && event.which == '39'){
+                event.preventDefault();
+                index_button(1)
+            }
+            else if (event.which == '39'){
+                event.preventDefault();
+                move_audio(1)
+            }
+            if (event.ctrlKey == true && event.which == '37'){
+                event.preventDefault();
+                index_button(-1)
+            }
+            if (event.which == '37'){
+                event.preventDefault();
+                move_audio(-1)
+            }
+            if (event.which == '38'){
+                event.preventDefault();
+                adding_volume(1)
+            }
+            if (event.which == '40'){
+                event.preventDefault();
+                adding_volume(-1)
+            }
+            if (event.which == '116'){
+                event.preventDefault();
+            }
         }
-        if (event.ctrlKey == true && event.which == '39'){
-            event.preventDefault();
-            index_button(1)
-        }
-        else if (event.which == '39'){
-            event.preventDefault();
-            move_audio(1)
-        }
-        if (event.ctrlKey == true && event.which == '37'){
-            event.preventDefault();
-            index_button(-1)
-        }
-        if (event.which == '37'){
-            event.preventDefault();
-            move_audio(-1)
-        }
-        if (event.which == '38'){
-            event.preventDefault();
-            adding_volume(1)
-        }
-        if (event.which == '40'){
-            event.preventDefault();
-            adding_volume(-1)
-        }
-        if (event.which == '116'){
-            event.preventDefault();
-        }
-        
         if (event.ctrlKey && ( event.which == '189'|| event.which == '107' || event.which == '187' || event.which == '109'))
         {
             event.preventDefault();

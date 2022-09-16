@@ -43,7 +43,8 @@
                     </center>
                 </div>
             </div>
-            <div id="elements_table"></div>
+            <div id="elements_table">
+            </div>
             <button class="add" onclick="document.getElementById('add_screen').style =''">+</button>
             <button class="trash" onclick="trashButton(this)" onmouseover="trashOver(this)" onmouseleave="trashLeave(this)">X</button>
         </div>
@@ -76,7 +77,6 @@
             <center><h1>SETTINGS</h1>
                 <hr></center>
             <form>
-                <p>music location:        <input type="text"></p>
                 <p>dark mode:        <label class="switch">
                     <input id="dark_mode" onclick="trigger_dark_mode()" type="checkbox">
                     <span class="slider round"></span>

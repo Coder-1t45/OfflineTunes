@@ -1,30 +1,41 @@
 :root{
     --background:white;
     --font-color: black;
-    --light-color:rgb(75,75,75);
+    --light-color:rgb(50,50,50);
+    --lighter-color:rgb(75,75,75);
     --player:rgb(46, 46, 46);
     --nav:rgb(205, 205, 205);
     --nav-font:rgb(75,75,75);
     --nav-hover:black;
     --button-back:rgb(240,240,240);
+    --button-back-d:rgb(245,245,245);
     --button2-back:rgb(215,215,215);
     --player-input-normal:white;
     --network:rgb(248,248,248);
     --ngraph:rgb(220,220,220);
+    --tunebox-border:rgba(25, 25, 25, 0.3);
+    --tunebox-selected:rgb(20, 95, 156);
+    --tunebox-trash:rgb(212, 73, 73);
+    --disabled:rgb(180,180,180);
 }
 body.dark{
     --background:rgb(46,46,46);
     --font-color: white;
-    --light-color:rgb(235,235,235);
+    --light-color:rgb(240,240,240);
+    --lighter-color:rgb(235,235,235);
     --player:rgb(25,25,25);
     --nav:rgb(55, 55, 55);
     --nav-font:rgb(230,230,230);
     --nav-hover:white;
     --button-back:rgb(30,30,30);
+    --button-back-d:rgb(35,35,35);
     --button2-back:rgb(25,25,25);
     --player-input-normal:rgb(10,10,10);
     --network:rgb(60,60,60);
     --ngraph:rgb(40,40,40);
+    --tunebox-border:rgba(200,200,200,0.3);
+    --tunebox-trash:rgb(130, 23, 23);
+    --disabled:rgb(75,75,75);
 }
 body{
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -126,6 +137,16 @@ button:active{
 .add_screen .box .buttons button{
     display: inline-block;
     margin:0 1vh;
+}
+button[disabled]{
+    text-decoration-line: line-through; 
+    color:var(--disabled);
+    background-color:var(--button-back-d);
+    cursor:progress;
+}
+button[disabled]:hover,
+button[disabled]:active{
+    transform: scale(1);
 }
 .trash {
     position:absolute;
@@ -303,15 +324,15 @@ button:active{
     padding:1%;
     font-size:2.5vh;
     width:98%;
-    background-color:white;
+    background-color:var(--background);
     cursor:pointer;
     transition: background-color .1s ease-out;
-    color:rgb(50,50,50);
-    border-bottom: 0.12vh solid rgba(25,25,25,0.3);
+    color:var(--light-color);
+    border-bottom: 0.12vh solid var(--tunebox-border);
 }
 .tunebox:hover{
-    background-color: rgb(225, 225, 225);
-    color:black;
+    background-color: var(--button-back);
+    color:var(--font-color);
 }
 .tunebox p{
     position:inherit;
@@ -431,7 +452,7 @@ h1{
     bottom:0%;
     height:12%;
     width:100%;
-    color:var(--light-color);
+    color:var(--lighter-color);
     font-weight: lighter;
     z-index: 50;
 }

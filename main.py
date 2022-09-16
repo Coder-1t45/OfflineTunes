@@ -182,7 +182,10 @@ def statusTune(id):
         
         with open(TEMPS_FILE, 'w') as write_stream:
             write_stream.write(dumps(data))
-            app.statusTune(id)
+            try:
+                app.statusTune(id)
+            except:
+                print()
 
 #update after download
 def updateTune(id, src):
@@ -215,8 +218,9 @@ def check_past_downloading():
         clear_unwanted = False
         global download_list
         
-        for tune in tunes_data:
+        for id, tune in enumerate(tunes_data):
             if tune['status'] != 'local':
+                tune = tune|{'id':id}
                 download_list.append(tune)
                 if tune['status'] == 'downloading':
                     clear_unwanted = True
