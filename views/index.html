@@ -15,6 +15,7 @@
     <div class="navbar">
         <a onclick="document.getElementById('main').style='transform:translateY(0%)'">TUNES PLAYER</a>
         <a onclick="document.getElementById('main').style='transform:translateY(-100%)'">NETWORK</a>
+        <a onclick="document.getElementById('main').style='transform:translateY(-200%)'">SETTINGS</a>
     </div>
     <!--style="display:none;"-->
     
@@ -46,7 +47,7 @@
             <button class="add" onclick="document.getElementById('add_screen').style =''">+</button>
             <button class="trash" onclick="trashButton(this)" onmouseover="trashOver(this)" onmouseleave="trashLeave(this)">X</button>
         </div>
-        <div class="body" id="management">
+        <div class="body2" id="management">
             <center>
                 <h1>NETWORK</h1>
                 <hr>
@@ -70,6 +71,18 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="body2" id="settings">
+            <center><h1>SETTINGS</h1>
+                <hr></center>
+            <form>
+                <p>music location:        <input type="text"></p>
+                <p>dark mode:        <label class="switch">
+                    <input id="dark_mode" onclick="trigger_dark_mode()" type="checkbox">
+                    <span class="slider round"></span>
+                </label>
+                </p>
+            </form>
         </div>
     </main>
     </div>

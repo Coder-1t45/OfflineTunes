@@ -17,6 +17,9 @@ let tunes_data = []
 let downloading_list = []
 
 let current_progress = 0;
+
+let dark_mode = false;
+
 /* every_object_in_tunes_data =  { name:'', src:'', status:'', maybe_element:''}*/
 
 //helpful functions
@@ -150,7 +153,9 @@ async function load_data() {
     parent = clear();
 
     //get data
-    tunes_data = JSON.parse(await eel.load_data()());
+    [json_tuned_data, dark_mode] = await eel.load_data()()
+    tunes_data = JSON.parse(json_tuned_data);
+    dark_mode_handle()
 
     tunes_data.forEach((element, id) => {
         let name = element.name;
@@ -303,7 +308,13 @@ function allProgressUPDATE(){
     //display
     let value = (ap_current / 100 + ap_index) / ap_maxtunes
     all_progress = document.getElementById('m_allProgress');
-    all_progress.value = value * all_progress.max;
+    try{
+        all_progress.value = value * all_progress.max;
+    }
+    catch{
+        
+    }
+    
 }
 function allProgressNEXT(){
     ap_current = 0;
@@ -319,6 +330,16 @@ function currentProgress(p, net_speed, perfix, eta) {
     current_progress = p;
 }
 
+function trigger_dark_mode(){
+    dark_mode = !dark_mode;
+    dark_mode_handle();
+}
+function dark_mode_handle(){
+    document.body.className = dark_mode ? 'dark': '';
+    object = document.getElementById('dark_mode')
+    object.checked = dark_mode;
+}
+
 //when window ready
 $(window).ready(()=>{
     //start space
@@ -331,7 +352,9 @@ $(window).ready(()=>{
 
     audio_element.addEventListener('timeupdate',Update, false);
     volume_input_element = document.getElementById('volume_range')
+
     load_data();
+
     //load interval
     let interval = window.setInterval(allProgressUPDATE, 1000 / 2)
 
@@ -363,6 +386,7 @@ $(window).ready(()=>{
     
     
     //disable mouse-page scaling
+    //https://keyjs.dev/
     $(document).keydown(function(event) {
     if (event.ctrlKey==true && (event.which == '61' || event.which == '107' || event.which == '173' || event.which == '109'  || event.which == '187'  || event.which == '189'  ) ) {
             event.preventDefault();
@@ -373,22 +397,36 @@ $(window).ready(()=>{
             play_button(document.getElementById('playButton'))
         }
         if (event.ctrlKey == true && event.which == '39'){
+            event.preventDefault();
             index_button(1)
         }
         else if (event.which == '39'){
+            event.preventDefault();
             move_audio(1)
         }
         if (event.ctrlKey == true && event.which == '37'){
+            event.preventDefault();
             index_button(-1)
         }
         if (event.which == '37'){
+            event.preventDefault();
             move_audio(-1)
         }
         if (event.which == '38'){
+            event.preventDefault();
             adding_volume(1)
         }
         if (event.which == '40'){
+            event.preventDefault();
             adding_volume(-1)
+        }
+        if (event.which == '116'){
+            event.preventDefault();
+        }
+        
+        if (event.ctrlKey && ( event.which == '189'|| event.which == '107' || event.which == '187' || event.which == '109'))
+        {
+            event.preventDefault();
         }
         // 107 Num Key  +
         // 109 Num Key  -
@@ -396,14 +434,24 @@ $(window).ready(()=>{
         // 61 Plus key  +/= key
     });
 
+    /* CANT PREVENT PASSIVE EVENT
     function disableWheeling (event) {
         if (event.type == "wheel" && event.ctrlKey == true) {
-            e.preventDefault();
+            event.preventDefault();
         }
     }
     
-    $(window).bind('wheel', (e) => {if (event.ctrlKey == true) e.preventDefault();});
-    window.onbeforeunload = window.onclose=async ()=>{
-        await eel.closeSocket()()
+    $(window).bind('wheel', (e) => {
+        console.log('wheel');
+        disableWheeling(e);
+        if (e.ctrlKey == true) 
+            e.preventDefault();
+    });*/
+
+    window.onbeforeunload = window.onclose =async (eve)=>{
+        eve.stopImmediatePropagation();
+        eve.preventDefault();
+        await eel.closeSocket(dark_mode)()
+        document.close()
     }
 })

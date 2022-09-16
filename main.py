@@ -9,6 +9,8 @@ import time
 from temp import TEMPS_FILE
 
 TUNES_FOLDER = 'musics'
+DARK_MODE = False
+
 downloading = False
 gathering = False
 current_progress = ''
@@ -27,7 +29,8 @@ def download(tune_name:str, tune_link:str, id:int):
     video_info = youtube_dl.YoutubeDL().extract_info(
         url = video_url,download=False
     )
-    filename = tune_name + '.mp3' if not tune_name.endswith('.mp3') else tune_name  #f"{video_info['title']}.mp3"
+    
+    filename = video_info['title'] if tune_name == '' else tune_name + '.mp3' if not tune_name.endswith('.mp3') else tune_name  #f"{video_info['title']}.mp3"
     options={
         'format':'bestaudio/best',
         'keepvideo':False,
@@ -111,8 +114,9 @@ thread.start()
 def load_data():
     #data loading
     with open(TEMPS_FILE, 'r') as read_stream:
+        global DARK_MODE
         data = loads(read_stream.read())
-        return dumps(data['tunes_data'])
+        return [dumps(data['tunes_data']), DARK_MODE]
 
 @app.expose
 def addTunes(name, link):
@@ -197,7 +201,8 @@ def updateTune(id, src):
 temp_sample = {
     'tunes_data':[
         #{'name':'', 'src':'', 'status':''}
-    ]
+    ],
+    'dark_mode':False
 }
 
 #check if theres uncomplited downlod files:
@@ -233,17 +238,34 @@ def check_past_downloading():
 def local_file_addressor(music):
     return app.btl.static_file(music,'musics')
 
+def sload_data():
+    with open(TEMPS_FILE, 'r') as read_stream:
+        data = loads(read_stream.read())
+        global DARK_MODE
+        DARK_MODE = data['dark_mode']
+
 @app.expose
-def closeSocket():
+def closeSocket(dark_mode):
+    print('saving')
+    #save dark_mode and temp_folder
+    with open(TEMPS_FILE, 'r') as read_stream:
+        data = loads(read_stream.read())
+
+        data['dark_mode'] = dark_mode
+        
+        with open(TEMPS_FILE, 'w') as write_stream:
+            write_stream.write(dumps(data))
+    print('exiting')
+    #exit programm
     os._exit(0)
 
-app._websocket
 if __name__ == '__main__':
     #create temp if not exist
     if not os.path.exists(TEMPS_FILE):
         with open(TEMPS_FILE, 'w') as f:
             f.write(dumps(temp_sample))
     
+    sload_data()
     check_past_downloading()
     
     #run the app
