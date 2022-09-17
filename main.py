@@ -8,7 +8,7 @@ import time
 
 from temp import TEMPS_FILE
 
-TUNES_FOLDER = 'musics'
+tunes_folder = 'Tunes'
 DARK_MODE = False
 
 downloading = False
@@ -34,16 +34,15 @@ def download(tune_name:str, tune_link:str, id:int):
     options={
         'format':'bestaudio/best',
         'keepvideo':False,
-        'outtmpl':f'{TUNES_FOLDER}/{filename}',
+        'outtmpl':f'{tunes_folder}/{filename}',
     }
 
     downloading = True
     with youtube_dl.YoutubeDL(options) as ydl:
         ydl.download([video_info['webpage_url']])
     downloading = False
-    print('updateing tune')
     #updating tune status to local
-    updateTune(id=id, src=f'{TUNES_FOLDER}/{filename}')
+    updateTune(id=id, src=f'{tunes_folder}/{filename}')
     download_list.pop(0)
     gathering = False
 
@@ -99,7 +98,6 @@ def download_thread_management():
     while True:
         global download_list
         if len(download_list) > 0 and not gathering:
-            print(f'\n\t(id={id}) downloading process\n')
             object = download_list[0]
             download(object['name'], object['link'], object['id'])
 
@@ -116,7 +114,7 @@ def load_data():
     with open(TEMPS_FILE, 'r') as read_stream:
         global DARK_MODE
         data = loads(read_stream.read())
-        return [dumps(data['tunes_data']), DARK_MODE]
+        return [dumps(data['tunes_data']), DARK_MODE, tunes_folder]
 
 @app.expose
 def addTunes(name, link):
@@ -159,10 +157,10 @@ def delteTunes(ids:list):
             #clear unwated .part's files
             if clear_unwanted:
                 data_files = [tune['src'] for tune in data['tunes_data']]
-                folder_files = [f for f in os.listdir(TUNES_FOLDER) if os.path.isfile(os.path.join(TUNES_FOLDER, f))]
+                folder_files = [f for f in os.listdir(tunes_folder) if os.path.isfile(os.path.join(tunes_folder, f))]
                 for f in folder_files:
                     if f not in data_files:
-                        fpath = os.path.join(TUNES_FOLDER, f)
+                        fpath = os.path.join(tunes_folder, f)
                         os.remove(fpath)
 
             with open(TEMPS_FILE, 'w') as write_stream:
@@ -185,8 +183,8 @@ def statusTune(id):
             try:
                 app.statusTune(id)
             except:
-                print()
-
+                pass
+            
 #update after download
 def updateTune(id, src):
     #change status and src
@@ -205,7 +203,8 @@ temp_sample = {
     'tunes_data':[
         #{'name':'', 'src':'', 'status':''}
     ],
-    'dark_mode':False
+    'tunes_location':tunes_folder,
+    'dark_mode':False,
 }
 
 #check if theres uncomplited downlod files:
@@ -228,40 +227,76 @@ def check_past_downloading():
         #clear unwated .part's files
         if clear_unwanted:
             data_files = [tune['src'] for tune in tunes_data]
-            folder_files = [f for f in os.listdir(TUNES_FOLDER) if os.path.isfile(os.path.join(TUNES_FOLDER, f))]
+            folder_files = [f for f in os.listdir(tunes_folder) if os.path.isfile(os.path.join(tunes_folder, f))]
             for f in folder_files:
                 if f not in data_files:
-                    fpath = os.path.join(TUNES_FOLDER, f)
+                    fpath = os.path.join(tunes_folder, f)
                     os.remove(fpath)
         
         with open(TEMPS_FILE, 'w') as write_stream:
             write_stream.write(dumps(data))
 
 #apply requests from outsider path / local file problem
-@app.btl.route('/musics/<music>')
-def local_file_addressor(music):
-    return app.btl.static_file(music,'musics')
+@app.btl.route('/tune/<music>')
+def local_file_addressor(music:str):
+    tunes_data = []
+    with open(TEMPS_FILE, 'r') as read_stream:
+        data = loads(read_stream.read())
+        tunes_data = data['tunes_data']
+    for tune in tunes_data:
+        if tune['name'] == music:
+            folder = '/'.join(tune['src'].replace('\\','/').split('/')[:-1])
+            return app.btl.static_file(music + '.mp3' if not music.endswith('.mp3') else music,folder)
 
 def sload_data():
     with open(TEMPS_FILE, 'r') as read_stream:
         data = loads(read_stream.read())
-        global DARK_MODE
+        global DARK_MODE, tunes_folder
         DARK_MODE = data['dark_mode']
+        tunes_folder = data['tunes_location']
 
 @app.expose
 def closeSocket(dark_mode):
-    print('saving')
     #save dark_mode and temp_folder
     with open(TEMPS_FILE, 'r') as read_stream:
         data = loads(read_stream.read())
 
         data['dark_mode'] = dark_mode
-        
+        data['tunes_location'] =  tunes_folder
+
         with open(TEMPS_FILE, 'w') as write_stream:
             write_stream.write(dumps(data))
-    print('exiting')
     #exit programm
     os._exit(0)
+
+@app.expose
+def changeLocation(value):
+    global tunes_folder
+    tunes_folder = value
+
+@app.expose
+def move_tunes():
+    with open(TEMPS_FILE, 'r') as read_stream:
+        data = loads(read_stream.read())
+
+        global tunes_folder
+        for tune in data['tunes_data']:
+            tune_mp3 = tune['src'].replace('\\','/').split('/')[-1]
+            tune_old = tune['src']
+            tune_new = os.path.join(tunes_folder, tune_mp3)
+
+            try:
+                os.rename(tune_old, tune_new)
+                
+            except:
+                import shutil
+                
+                shutil.move(os.path.abspath(tune_old),os.path.abspath(tune_new))
+                #difrrent disk
+            tune['src'] = tune_new
+
+        with open(TEMPS_FILE, 'w') as write_stream:
+            write_stream.write(dumps(data))
 
 if __name__ == '__main__':
     #create temp if not exist

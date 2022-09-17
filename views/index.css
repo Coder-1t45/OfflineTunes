@@ -17,6 +17,33 @@
     --tunebox-selected:rgb(20, 95, 156);
     --tunebox-trash:rgb(212, 73, 73);
     --disabled:rgb(180,180,180);
+    --white:white;
+    --black:black;
+}
+*[tooltip]::after{
+    content:attr(tooltip);
+    opacity:0;
+    font-size: 2vh;
+    background-color:var(--black);
+    padding:0.5vh;
+    color:var(--white);
+    transition:opacity ease-out .1s;
+    user-select: none;
+    width: max-content;
+    height:max-content;
+    transform: translateY(-100%) translateX(-50%);
+    letter-spacing: normal;
+    z-index: 1200000000;
+    position: absolute;
+    top:-0.25rem;
+    left:50%;
+    border-radius: 0.5vh;
+}
+*[tooltip]:hover::after{
+    opacity:0.7;
+}
+.middle button[tooltip]::after{
+    transform: translateY(150%) translateX(-50%);
 }
 body.dark{
     --background:rgb(46,46,46);
@@ -36,6 +63,8 @@ body.dark{
     --tunebox-border:rgba(200,200,200,0.3);
     --tunebox-trash:rgb(130, 23, 23);
     --disabled:rgb(75,75,75);
+    --white:black;
+    --black:white;
 }
 body{
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -246,7 +275,7 @@ button[disabled]:active{
     color:white;
 }
 .player .middle button{
-    background-color:var(--player);
+    background-color:rgba(0,0,0,0);
     color:white;
     position:relative;
     bottom:50%;
@@ -511,8 +540,9 @@ h1{
 .body2#management div#network div#dstatus .l progress::after{
     content:attr(value) '%';
     display:inline-block;
-    color:rgb(75,75,75);
+    color:var(--lighter-color);
     font-size: 1.5vh;
+
     padding:1vh 1.5vh;
     max-width: 2vh;
     overflow-x: hidden;
@@ -589,4 +619,26 @@ h1{
 }
 .body2#settings input:focus{
     transform:scale(1);
+}
+#move_tunes + p{
+    opacity:0;
+    transition: all .25s ease-in-out;
+    color:var(--lighter-color);
+    max-width: fit-content;
+}
+#move_tunes:hover +p{
+    opacity: 1;
+    transform: scale(1.1);
+    z-index: 10000;
+}
+#location_sumbit +p{
+    opacity:0;
+    transition: all .25s ease-in-out;
+    color:var(--lighter-color);
+    max-width: fit-content;
+}
+#location_sumbit:hover +p{
+    opacity: 1;
+    transform: scale(1.1);
+    z-index: 10000;
 }

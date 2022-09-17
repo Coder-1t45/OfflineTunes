@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="icon.png">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
@@ -45,8 +46,8 @@
             </div>
             <div id="elements_table">
             </div>
-            <button class="add" onclick="document.getElementById('add_screen').style =''">+</button>
-            <button class="trash" onclick="trashButton(this)" onmouseover="trashOver(this)" onmouseleave="trashLeave(this)">X</button>
+            <button tooltip="add" class="add" onclick="document.getElementById('add_screen').style =''">+</button>
+            <button tooltip="delete" class="trash" onclick="trashButton(this)" onmouseover="trashOver(this)" onmouseleave="trashLeave(this)">X</button>
         </div>
         <div class="body2" id="management">
             <center>
@@ -77,11 +78,17 @@
             <center><h1>SETTINGS</h1>
                 <hr></center>
             <form>
+                <p style="display: inline-block; margin-bottom:0">tunes location:        <input id="location_input" style="margin-bottom:0" type="text" placeholder="location goes here"></p>
+                <button id="location_sumbit" style="display:inline-block;">sumbit</button>
+                    <p style="margin-top:0;">update database, will only apply for new tunes</p>
+                
                 <p>dark mode:        <label class="switch">
                     <input id="dark_mode" onclick="trigger_dark_mode()" type="checkbox">
                     <span class="slider round"></span>
                 </label>
                 </p>
+                <button id="move_tunes" onclick="move_tunes()">move all tunes into the new tunes location</button>
+                <p style="margin-top:0;">the app will shut down for somereason, but it will work</p>
             </form>
         </div>
     </main>
@@ -92,17 +99,16 @@
             <!--https://emojicombos.com/music-player-text-symbols
             -->
         <div class="middle">
-            <button style="color:white;">⇄</button>
+            <button style="color:white;" tooltip="continue">⇄</button>
             <button onclick="index_button(-1)">◃◃</button>
-            <button onclick="move_audio(-1)">◃</button>
-            <button onclick="play_button(this)" id="playButton">▷</button>
-            <button onclick="move_audio(1)">▹</button>
+            <button onclick="move_audio(-1)" tooltip="5-">◃</button>
+            <button onclick="play_button(this)" id="playButton" tooltip="play / pause">▷</button>
+            <button onclick="move_audio(1)" tooltip="5+">▹</button>
             <button onclick="index_button(1)">▹▹</button>
-            <button onclick="repeat_button(this)">↺</button>
+            <button onclick="repeat_button(this)" tooltip="repeat">↺</button>
         </div>
-        <input type="range" id="volume_range" min="0" max="100" value="100" onchange="volume_input(this)">
+        <input tooltip="volume" type="range" id="volume_range" min="0" max="100" value="100" onchange=" volume_input(this)">
         <p id="time">00:00 / 00:00</p>
-        
     </div>
     
 </body>

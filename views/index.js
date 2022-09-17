@@ -20,7 +20,7 @@ let current_progress = 0;
 let keyboard_occupied = false;
 
 let dark_mode = false;
-
+let tunes_folder = '';
 /* every_object_in_tunes_data =  { name:'', src:'', status:'', maybe_element:''}*/
 
 //helpful functions
@@ -122,7 +122,7 @@ function playTune(index) {
         tunes_data.forEach((element, id)=>{
             if (id == current_index){
                 name_text.innerHTML = 'playιng: ' + element.name;
-                audio_element.src =  element.status != 'local'? element.online_src: '/'+element.src;
+                audio_element.src =  element.status != 'local'? element.online_src: '/tune/'+element.name;
                 document.getElementById('elements_table').children[id].style = 'background-color: var(--tunebox-selected); color:white;';
             }
             else{
@@ -149,12 +149,31 @@ function clear() {
     return parent
 }
 
+async function move_tunes(){
+    await eel.move_tunes()()
+}
+
+async function changingLocation(value){
+    tunes_folder = value;
+    document.getElementById('location_sumbit').disabled = true;
+    await eel.changeLocation(value)()
+}
+
 async function load_data() {
     //clear parent
     parent = clear();
 
     //get data
-    [json_tuned_data, dark_mode] = await eel.load_data()()
+    [json_tuned_data, dark_mode, tunes_folder] = await eel.load_data()()
+
+    document.getElementById('location_input').value = tunes_folder
+    document.getElementById('location_input').onchange = () => {
+        document.getElementById('location_sumbit').disabled = document.getElementById('location_input').value == tunes_folder;
+    }
+    document.getElementById('location_sumbit').onclick = () =>{
+        changingLocation(document.getElementById('location_input').value)
+    }
+
     tunes_data = JSON.parse(json_tuned_data);
     dark_mode_handle()
 
@@ -245,6 +264,7 @@ async function trashButton(trash_button){
         tunes_data.forEach((element, id)=>{
             if (id == current_index) {
                 document.getElementById('elements_table').children[id].style = 'background-color: rgb(205, 205, 205);';
+                
             }
             else {
                 document.getElementById('elements_table').children[id].style = '';
@@ -279,6 +299,7 @@ async function trashButton(trash_button){
     else{
         trash_button.style='color:white; background-color:#3d3d3d;';
         if (current_index >= 0) document.getElementById('elements_table').children[current_index].style = '';
+
     }
 }
 function trashOver(trash_button){
@@ -367,6 +388,7 @@ $(window).ready(()=>{
     volume_input_element = document.getElementById('volume_range')
 
     load_data();
+
 
     //load interval
     let interval = window.setInterval(allProgressUPDATE, 1000 / 2)
